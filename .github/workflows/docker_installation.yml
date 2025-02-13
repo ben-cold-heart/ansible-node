@@ -14,6 +14,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Create Secure Inventory File
+        run: |
+          echo "[web_servers]" > inventory.ini
+          echo "${{ secrets.ANSIBLE_HOSTS }}" >> inventory.ini
+
       - name: Run Ansible Playbook
         run: |
           ansible-playbook -i ./inventory.ini ./playbook/install_docker.yml --extra-vars "ansible_become_password=$ANSIBLE_BECOME_PASS"
