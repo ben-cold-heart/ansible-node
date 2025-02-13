@@ -1,0 +1,21 @@
+name: Nginx Installation on Target node
+
+on:
+  push:
+    branches:
+      - nginx_installation
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ansible-node
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run Ansible Playbook
+        run: |
+          ansible-playbook -i ./inventory.ini ./playbook/install_nginx.yml --extra-vars "ansible_become_password=$ANSIBLE_BECOME_PASS"
+        env:
+          ANSIBLE_BECOME_PASS: ${{ secrets.ANSIBLE_BECOME_PASS }}
