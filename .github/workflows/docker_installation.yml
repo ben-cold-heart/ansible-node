@@ -13,6 +13,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        
+      - name: Create Secure Inventory File
+        run: |
+          echo "[web_servers]" > inventory.ini
+          echo "${{ secrets.ANSIBLE_INI }}" >> inventory.ini
 
       - name: Run Ansible Playbook
         run: |
