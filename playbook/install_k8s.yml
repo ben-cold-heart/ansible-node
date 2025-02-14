@@ -71,13 +71,15 @@
           - kubectl
         state: present
 
-    - name: Hold Kubernetes packages at current version
-      apt:
-        name:
-          - kubelet
-          - kubeadm
-          - kubectl
-        state: hold
+    - name: Hold Kubernetes packages
+      dpkg_selections:
+        name: "{{ item }}"
+        selection: hold
+      loop:
+        - kubelet
+        - kubeadm
+        - kubectl
+
 
     - name: Enable and start kubelet service
       systemd:
