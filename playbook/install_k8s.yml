@@ -13,15 +13,15 @@
         regexp: '.*\sswap\s.*'
         replace: ''
 
-    - name: Install required packages
-      apt:
-        name:
-          - curl
-          - apt-transport-https
-          - ca-certificates
-          - software-properties-common
-        state: present
-        update_cache: yes
+    # - name: Install required packages
+    #   apt:
+    #     name:
+    #       - curl
+    #       - apt-transport-https
+    #       - ca-certificates
+    #       - software-properties-common
+    #     state: present
+    #     update_cache: yes
 
     - name: Create directory for keyrings
       file:
@@ -42,6 +42,16 @@
 
     - name: Update apt cache
       apt:
+        update_cache: yes
+
+    - name: Install required packages
+      apt:
+        name:
+          - curl
+          - apt-transport-https
+          - ca-certificates
+          - software-properties-common
+        state: present
         update_cache: yes
 
     - name: Install Kubernetes components
