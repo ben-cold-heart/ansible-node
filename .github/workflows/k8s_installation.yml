@@ -14,10 +14,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         
-    #   - name: Create Secure Inventory File
-    #     run: |
-    #       echo "[web_servers]" > inventory.ini
-    #       echo "${{ secrets.ANSIBLE_INI }}" >> inventory.ini
+      - name: Create Secure Inventory File
+        run: |
+          echo "[web_servers]" > inventory.ini
+          echo "${{ secrets.ANSIBLE_INI }}" >> inventory.ini
 
       - name: Debug Inventory
         run: cat ./inventory.ini
@@ -29,7 +29,7 @@ jobs:
         run: |
             ansible-playbook -K -i inventory.ini ./playbook/install_k8s.yml \
                 --vault-password-file ~/.ansible_vault_pass
-                
+
       - name: Remove Vault Password File
         run: rm -f ~/.ansible_vault_pass
           
