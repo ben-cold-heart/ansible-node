@@ -1,0 +1,36 @@
+---
+- name: Bootstrap Python on Target Nodes
+  hosts: all
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Detect OS Family
+      raw: |
+        if [ -f /etc/debian_version ]; then
+          echo "debian"
+        elif [ -f /etc/redhat-release ]; then
+          echo "redhat"
+        elif [ -f /etc/alpine-release ]; then
+          echo "alpine"
+        else
+          echo "unknown"
+        fi
+      register: os_family
+
+    - name: Install Python on Debian-based systems
+      raw: apt-get update && apt-get install -y python3
+      when: os_family.stdout == "debian"
+
+    - name: Install Python on RedHat-based systems
+      raw: yum install -y python3
+      when: os_family.stdout == "redhat"
+
+    - name: Install Python on Alpine-based systems
+      raw: apk add --no-cache python3
+      when: os_family.stdout == "alpine"
+
+    - name: Fail if OS is not supported
+      fail:
+        msg: "Unsupported operating system. Manual intervention required."
+      when: os_family.stdout == "unknown"
