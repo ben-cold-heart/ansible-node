@@ -12,6 +12,11 @@
         regexp: '.*\sswap\s.*'
         replace: ''
 
+    - name: ตรวจสอบว่า Docker ได้ติดตั้งแล้วหรือไม่
+      command: docker --version
+      register: docker_version
+      ignore_errors: true
+
     - name: ติดตั้งแพ็กเกจที่จำเป็น
       apt:
         name:
@@ -26,11 +31,13 @@
       apt_key:
         url: https://download.docker.com/linux/ubuntu/gpg
         state: present
+      when: docker_version.failed
 
     - name: เพิ่มที่เก็บแพ็กเกจ Docker
       apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
         state: present
+      when: docker_version.failed
 
     - name: อัปเดตแคชของ APT
       apt:
@@ -40,6 +47,7 @@
       apt:
         name: docker-ce
         state: present
+      when: docker_version.failed
 
     - name: สร้างไดเรกทอรีสำหรับคีย์ริงของ Kubernetes
       file:
