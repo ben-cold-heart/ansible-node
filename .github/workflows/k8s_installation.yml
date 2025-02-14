@@ -14,13 +14,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
         
-      - name: Create Secure Inventory File
-        run: |
-          echo "[web_servers]" > inventory.ini
-          echo "${{ secrets.ANSIBLE_INI }}" >> inventory.ini
+    #   - name: Create Secure Inventory File
+    #     run: |
+    #       echo "[web_servers]" > inventory.ini
+    #       echo "${{ secrets.ANSIBLE_INI }}" >> inventory.ini
 
       - name: Run Ansible Playbook
         run: |
-          ansible-playbook -i ./inventory.ini ./playbook/install_k8s.yml --extra-vars "ansible_become_password=$ANSIBLE_BECOME_PASS"
-        env:
-          ANSIBLE_BECOME_PASS: ${{ secrets.ANSIBLE_BECOME_PASS }}
+          ansible-playbook -i ./inventory.ini ./playbook/install_k8s.yml --extra-vars "@secret.yml" --ask-vault-pass
+
