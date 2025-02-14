@@ -19,20 +19,20 @@ jobs:
           echo "[web_servers]" > inventory.ini
           echo "${{ secrets.ANSIBLE_INI }}" >> ./inventory.ini
 
-      - name: Create Vault Password File
-        run: echo "${{ secrets.ANSIBLE_VAULT_PASS }}" > ./.ansible_vault_pass
+    #   - name: Create Vault Password File
+    #     run: echo "${{ secrets.ANSIBLE_VAULT_PASS }}" > ./.ansible_vault_pass
 
-      - name: Create `secrets.yml` File
-        run: echo -e "${{ secrets.ANSIBLE_SECRET_YML }}" > ./secrets.yml
+    #   - name: Create `secrets.yml` File
+    #     run: echo -e "${{ secrets.ANSIBLE_SECRET_YML }}" > ./secrets.yml
 
       - name: Run Ansible Playbook
         run: |
             ansible-playbook -K -i inventory.ini ./playbook/install_k8s.yml \
-                --extra-vars "@secrets.yml" \
-                --vault-password-file ./.ansible_vault_pass
+                --extra-vars "ansible_become_password=${{ secrets.ANSIBLE_BECOME_PASS }}" \
 
-      - name: Remove Vault Password File
-        run: rm -f ./.ansible_vault_pass ./secrets.yml
+    #   - name: Remove Vault Password File
+    #     run: rm -f ./.ansible_vault_pass ./secrets.yml
+
 
 
           
