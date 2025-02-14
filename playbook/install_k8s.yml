@@ -1,80 +1,52 @@
 ---
-- name: Install Kubernetes on Ubuntu
-  hosts: all
-  become: yes
-  tasks:
-
-    - name: Disable Swap
-      command: swapoff -a
-
-    - name: Ensure swap is removed from fstab
-      replace:
-        path: /etc/fstab
-        regexp: '.*\sswap\s.*'
-        replace: ''
-
-    - name: Remove existing Kubernetes repository entries
-      find:
-        paths: /etc/apt/sources.list.d/
-        patterns: 'kubernetes*'
-      register: repo_files
-
-    - name: Delete conflicting repository files
-      file:
-        path: "{{ item.path }}"
-        state: absent
-      loop: "{{ repo_files.files }}"
-      when: repo_files.matched > 0
-
-    - name: Create directory for keyrings
-      file:
-        path: /usr/share/keyrings
-        state: directory
-        mode: '0755'
-
-    - name: Download Kubernetes GPG key
-      get_url:
-        url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
-        dest: /usr/share/keyrings/kubernetes-archive-keyring.gpg
-        mode: '0644'
-
-    - name: Add Kubernetes apt repository
-      apt_repository:
-        repo: "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /"
-        filename: "kubernetes"
-        state: present
-
-    - name: Update apt cache
-      apt:
-        update_cache: yes
-
-    - name: Install required packages
-      apt:
-        name:
-          - curl
-          - apt-transport-https
-          - ca-certificates
-          - software-properties-common
-        state: present
-
-    - name: Install Kubernetes components
-      apt:
-        name:
-          - kubelet
-          - kubeadm
-          - kubectl
-        state: present
-
-    - name: Hold Kubernetes packages at current version
-      apt:
-        name:
-          - kubelet
-          - kubeadm
-          - kubectl
-        state: hold
-
-    - name: Enable and start kubelet service
-      systemd:
-        name: kubelet
-        enabled: yes
-        state: started
+  - name: ติดตั้ง Kubernetes บน Ubuntu
+    hosts: all
+    become: yes
+    tasks:
+  
+      - name: ปิดการใช้งาน Swap
+        command: swapoff -a
+  
+      - name: ลบการตั้งค่า Swap ออกจาก fstab
+        replace:
+          path: /etc/fstab
+          regexp: '.*\sswap\s.*'
+          replace: ''
+  
+      - name: ลบไฟล์ที่เก็บแพ็กเกจ Kubernetes ที่อาจขัดแย้ง
+        find:
+          paths: /etc/apt/sources.list.d/
+          patterns: 'kubernetes*'
+        register: repo_files
+  
+      - name: ลบไฟล์ที่เก็บแพ็กเกจที่ขัดแย้ง
+        file:
+          path: "{{ item.path }}"
+          state: absent
+        loop: "{{ repo_files.files }}"
+        when: repo_files.matched > 0
+  
+      - name: สร้างไดเรกทอรีสำหรับคีย์ริง
+        file:
+          path: /etc/apt/keyrings
+          state: directory
+          mode: '0755'
+  
+      - name: ดาวน์โหลดและติดตั้งคีย์ GPG ของ Kubernetes
+        get_url:
+          url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
+          dest: /etc/apt/keyrings/kubernetes-archive-keyring.gpg
+          mode: '0644'
+  
+      - name: เพิ่มที่เก็บแพ็กเกจ Kubernetes
+        apt_repository:
+          repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /"
+          filename: "kubernetes"
+          state: present
+  
+      - name: อัปเดตแคชของ APT
+        apt:
+          update_cache:
+  ::contentReference[oaicite:0]{index=0}
+   
+  
