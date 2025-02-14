@@ -23,6 +23,11 @@
         state: present
         update_cache: yes
 
+    - name: Remove old Kubernetes repository
+      file:
+        path: /etc/apt/sources.list.d/kubernetes.list
+        state: absent
+
     - name: Add Kubernetes apt repository
       shell: |
         sudo mkdir -p /etc/apt/keyrings
@@ -31,6 +36,10 @@
       args:
         executable: /bin/bash
 
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
     - name: Install kubeadm, kubelet, and kubectl
       apt:
         name:
@@ -38,7 +47,6 @@
           - kubeadm
           - kubectl
         state: present
-        update_cache: yes
 
     - name: Hold kubeadm, kubelet, and kubectl at their installed versions
       command: apt-mark hold kubelet kubeadm kubectl
@@ -48,60 +56,3 @@
         name: kubelet
         enabled: yes
         state: started
-
-- name: Initialize Kubernetes Master
-  hosts: masters
-  become: yes
-  tasks:
-    - name: Initialize Kubernetes cluster
-      shell: kubeadm init --pod-network-cidr=192.168.1.0/16
-      args:
-        creates: /etc/kubernetes/admin.conf
-      register: k8s_init
-
-    - name: Copy admin.conf to root's kube config
-      copy:
-        src: /etc/kubernetes/admin.conf
-        dest: /root/.kube/config
-        remote_src: yes
-        owner: root
-        group: root
-        mode: '0600'
-
-    - name: Install Calico network plugin
-      shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
-      when: k8s_init.changed
-
-    - name: Generate token for worker nodes
-      shell: kubeadm token create --print-join-command
-      register: kubeadm_token
-      when: k8s_init.changed
-
-    - name: Save join command to a file
-      copy:
-        content: "{{ kubeadm_token.stdout }}"
-        dest: /home/ubuntu/join-command.sh
-        mode: '0755'
-      when: k8s_init.changed
-
-- name: Join Worker Nodes
-  hosts: workers
-  become: yes
-  tasks:
-    - name: Install kubeadm, kubelet, and kubectl on worker nodes
-      apt:
-        name:
-          - kubelet
-          - kubeadm
-          - kubectl
-        state: present
-        update_cache: yes
-
-    - name: Copy join command to worker nodes
-      copy:
-        src: /home/ubuntu/join-command.sh
-        dest: /home/ubuntu/join-command.sh
-        mode: '0755'
-
-    - name: Join Kubernetes cluster
-      command: sh /home/ubuntu/join-command.sh
