@@ -13,10 +13,18 @@
         regexp: '.*\sswap\s.*'
         replace: ''
 
-    - name: Remove conflicting Kubernetes repository entries
+    - name: Remove existing Kubernetes repository entries
+      find:
+        paths: /etc/apt/sources.list.d/
+        patterns: 'kubernetes*'
+      register: repo_files
+
+    - name: Delete conflicting repository files
       file:
-        path: /etc/apt/sources.list.d/kubernetes.list
+        path: "{{ item.path }}"
         state: absent
+      loop: "{{ repo_files.files }}"
+      when: repo_files.matched > 0
 
     - name: Create directory for keyrings
       file:
@@ -24,7 +32,7 @@
         state: directory
         mode: '0755'
 
-    - name: Download and dearmor Kubernetes GPG key
+    - name: Download Kubernetes GPG key
       get_url:
         url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
         dest: /usr/share/keyrings/kubernetes-archive-keyring.gpg
@@ -33,7 +41,7 @@
     - name: Add Kubernetes apt repository
       apt_repository:
         repo: "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /"
-        filename: "kubernetes.list"
+        filename: "kubernetes"
         state: present
 
     - name: Update apt cache
