@@ -1,67 +1,66 @@
 ---
-  - name: ติดตั้ง Kubernetes บน Ubuntu
-    hosts: all
-    become: yes
-    tasks:
-      - name: ปิดการใช้งาน Swap
-        command: swapoff -a
-  
-      - name: ลบการตั้งค่า Swap ออกจาก fstab
-        replace:
-          path: /etc/fstab
-          regexp: '.*\sswap\s.*'
-          replace: ''
-  
-      - name: ติดตั้งแพ็กเกจที่จำเป็น
-        apt:
-          name:
-            - apt-transport-https
-            - ca-certificates
-            - curl
-            - software-properties-common
-          state: present
-          update_cache: yes
-  
-      - name: เพิ่มคีย์ GPG ของ Kubernetes
-        apt_key:
-          url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
-          state: present
-  
-      - name: เพิ่มที่เก็บแพ็กเกจ Kubernetes
-        apt_repository:
-          repo: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
-          state: present
-  
-      - name: อัปเดตแคชของ APT
-        apt:
-          update_cache: yes
-  
-      - name: ติดตั้ง Kubernetes
-        apt:
-          name:
-            - kubelet
-            - kubeadm
-            - kubectl
-          state: present
-          update_cache: yes
-  
-      - name: กำหนดให้แพ็กเกจ Kubernetes ไม่ถูกอัปเกรดโดยอัตโนมัติ
-        apt:
-          name:
-            - kubelet
-            - kubeadm
-            - kubectl
-          state: present
-          force: yes
-          allow_downgrade: yes
-          allow_unauthenticated: yes
-          install_recommends: no
-          update_cache: yes
-          upgrade: 'no'
-  
-      - name: เริ่มและเปิดใช้งานบริการ kubelet
-        systemd:
-          name: kubelet
-          enabled: yes
-          state: started
-  
+- name: ติดตั้ง Kubernetes บน Ubuntu
+  hosts: all
+  become: yes
+  tasks:
+    - name: ปิดการใช้งาน Swap
+      command: swapoff -a
+
+    - name: ลบการตั้งค่า Swap ออกจาก fstab
+      replace:
+        path: /etc/fstab
+        regexp: '.*\sswap\s.*'
+        replace: ''
+
+    - name: ติดตั้งแพ็กเกจที่จำเป็น
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - software-properties-common
+        state: present
+        update_cache: yes
+
+    - name: เพิ่มคีย์ GPG ของ Kubernetes
+      apt_key:
+        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        state: present
+
+    - name: เพิ่มที่เก็บแพ็กเกจ Kubernetes
+      apt_repository:
+        repo: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+        state: present
+
+    - name: อัปเดตแคชของ APT
+      apt:
+        update_cache: yes
+
+    - name: ติดตั้ง Kubernetes
+      apt:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+        state: present
+        update_cache: yes
+
+    - name: กำหนดให้แพ็กเกจ Kubernetes ไม่ถูกอัปเกรดโดยอัตโนมัติ
+      apt:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+        state: present
+        force: yes
+        allow_downgrade: yes
+        allow_unauthenticated: yes
+        install_recommends: no
+        update_cache: yes
+        upgrade: 'no'
+
+    - name: เริ่มและเปิดใช้งานบริการ kubelet
+      systemd:
+        name: kubelet
+        enabled: yes
+        state: started
