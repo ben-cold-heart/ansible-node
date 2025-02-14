@@ -21,5 +21,9 @@ jobs:
 
       - name: Run Ansible Playbook
         run: |
-          ansible-playbook -i ./inventory.ini ./playbook/install_k8s.yml --extra-vars "@secret.yml" --ask-vault-pass
+          ansible-playbook -i ./inventory.ini \
+            ./playbook/install_k8s.yml \
+            --extra-vars "@secret.yml" \
+            --ask-vault-pass \
+            --extra-vars ${{ secrets.ANSIBLE_VAULT_PASS }}
 
