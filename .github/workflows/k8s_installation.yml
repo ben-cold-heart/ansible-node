@@ -25,6 +25,9 @@ jobs:
       - name: Create Vault Password File
         run: echo "${{ secrets.ANSIBLE_VAULT_PASS }}" > ~/.ansible_vault_pass
 
+      - name: Create `secrets.yml` File
+        run: echo "${{ secrets.ANSIBLE_SECRET_YML }}" | base64 --decode > ./secret2.yml
+
       - name: Run Ansible Playbook
         run: |
             ansible-playbook -K -i inventory.ini ./playbook/install_k8s.yml \
