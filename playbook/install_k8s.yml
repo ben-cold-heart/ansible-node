@@ -13,23 +13,6 @@
         regexp: '.*\sswap\s.*'
         replace: ''
 
-    - name: Remove old Kubernetes repository
-      file:
-        path: /etc/apt/sources.list.d/kubernetes.list
-        state: absent
-
-    - name: Add Kubernetes apt repository
-      shell: |
-        sudo mkdir -p /etc/apt/keyrings
-        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | sudo tee /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-        echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
-      args:
-        executable: /bin/bash
-
-    - name: Update apt cache
-      apt:
-        update_cache: yes
-
     - name: Install required packages
       apt:
         name:
@@ -38,6 +21,28 @@
           - ca-certificates
           - software-properties-common
         state: present
+        update_cache: yes
+
+    - name: Create directory for keyrings
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Kubernetes GPG key
+      get_url:
+        url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
+        dest: /etc/apt/keyrings/kubernetes-archive-keyring.gpg
+        mode: '0644'
+
+    - name: Add Kubernetes apt repository
+      apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /"
+        state: present
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
 
     - name: Install Kubernetes components
       apt:
