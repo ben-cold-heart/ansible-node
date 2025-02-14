@@ -19,11 +19,20 @@ jobs:
     #       echo "[web_servers]" > inventory.ini
     #       echo "${{ secrets.ANSIBLE_INI }}" >> inventory.ini
 
+      - name: Debug Inventory
+        run: cat ./inventory.ini
+
+      - name: Create Vault Password File
+        run: echo "${{ secrets.ANSIBLE_VAULT_PASS }}" > ~/.ansible_vault_pass
+
       - name: Run Ansible Playbook
         run: |
           ansible-playbook -i ./inventory.ini \
             ./playbook/install_k8s.yml \
             --extra-vars "@secret.yml" \
-            --ask-vault-pass \
-            --extra-vars ${{ secrets.ANSIBLE_VAULT_PASS }}
+            --vault-password-file ~/.ansible_vault_pass
+
+      - name: Remove Vault Password File
+        run: rm -f ~/.ansible_vault_pass
+          
 
