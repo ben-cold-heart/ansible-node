@@ -6,14 +6,13 @@
 
     - name: Disable Swap
       command: swapoff -a
-      become: yes
 
     - name: Ensure swap is removed from fstab
       replace:
         path: /etc/fstab
         regexp: '.*\sswap\s.*'
         replace: ''
-    
+
     - name: Install required packages
       apt:
         name:
@@ -26,8 +25,9 @@
 
     - name: Add Kubernetes apt repository
       shell: |
-        curl -fsSL https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-        echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+        sudo mkdir -p /etc/apt/keyrings
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.27/deb/Release.key | sudo tee /etc/apt/keyrings/kubernetes-apt-keyring.asc
+        echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.asc] https://pkgs.k8s.io/core:/stable:/v1.27/deb/ /" | sudo tee /etc/apt/sources.list.d/kubernetes.list
       args:
         executable: /bin/bash
 
@@ -41,13 +41,7 @@
         update_cache: yes
 
     - name: Hold kubeadm, kubelet, and kubectl at their installed versions
-      dpkg_selections:
-        name: "{{ item }}"
-        selection: hold
-      loop:
-        - kubelet
-        - kubeadm
-        - kubectl
+      command: apt-mark hold kubelet kubeadm kubectl
 
     - name: Enable and start kubelet
       systemd:
@@ -65,25 +59,16 @@
         creates: /etc/kubernetes/admin.conf
       register: k8s_init
 
-    - name: Create .kube directory
-      file:
-        path: /home/ubuntu/.kube
-        state: directory
-        owner: ubuntu
-        group: ubuntu
-        mode: '0755'
-
-    - name: Copy admin.conf to user's kube config
+    - name: Copy admin.conf to root's kube config
       copy:
         src: /etc/kubernetes/admin.conf
-        dest: /home/ubuntu/.kube/config
+        dest: /root/.kube/config
         remote_src: yes
-        owner: ubuntu
-        group: ubuntu
-        mode: '0644'
+        owner: root
+        group: root
+        mode: '0600'
 
     - name: Install Calico network plugin
-      become_user: ubuntu
       shell: kubectl apply -f https://docs.projectcalico.org/manifests/calico.yaml
       when: k8s_init.changed
 
@@ -96,20 +81,27 @@
       copy:
         content: "{{ kubeadm_token.stdout }}"
         dest: /home/ubuntu/join-command.sh
-        mode: '0644'
+        mode: '0755'
       when: k8s_init.changed
 
 - name: Join Worker Nodes
   hosts: workers
   become: yes
   tasks:
-    - name: Copy join command from master
-      fetch:
+    - name: Install kubeadm, kubelet, and kubectl on worker nodes
+      apt:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+        state: present
+        update_cache: yes
+
+    - name: Copy join command to worker nodes
+      copy:
         src: /home/ubuntu/join-command.sh
-        dest: ./join-command.sh
-        flat: yes
+        dest: /home/ubuntu/join-command.sh
+        mode: '0755'
 
     - name: Join Kubernetes cluster
-      command: sh ./join-command.sh
-      args:
-        chdir: /home/ubuntu
+      command: sh /home/ubuntu/join-command.sh
