@@ -13,16 +13,6 @@
         regexp: '.*\sswap\s.*'
         replace: ''
 
-    - name: Install required packages
-      apt:
-        name:
-          - curl
-          - apt-transport-https
-          - ca-certificates
-          - software-properties-common
-        state: present
-        update_cache: yes
-
     - name: Remove old Kubernetes repository
       file:
         path: /etc/apt/sources.list.d/kubernetes.list
@@ -40,18 +30,33 @@
       apt:
         update_cache: yes
 
-    - name: Install kubeadm, kubelet, and kubectl
+    - name: Install required packages
+      apt:
+        name:
+          - curl
+          - apt-transport-https
+          - ca-certificates
+          - software-properties-common
+        state: present
+
+    - name: Install Kubernetes components
       apt:
         name:
           - kubelet
           - kubeadm
           - kubectl
         state: present
+        update_cache: yes
 
-    - name: Hold kubeadm, kubelet, and kubectl at their installed versions
-      command: apt-mark hold kubelet kubeadm kubectl
+    - name: Hold Kubernetes packages at current version
+      apt:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+        state: hold
 
-    - name: Enable and start kubelet
+    - name: Enable and start kubelet service
       systemd:
         name: kubelet
         enabled: yes
