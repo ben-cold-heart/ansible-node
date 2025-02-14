@@ -28,7 +28,7 @@ jobs:
       - name: Run Ansible Playbook
         run: |
             ansible-playbook -K -i inventory.ini ./playbook/install_k8s.yml \
-                --extra-vars "@secrets.yml" \
+                --extra-vars "@secret2.yml" \
                 --vault-password-file ~/.ansible_vault_pass
 
       - name: Remove Vault Password File
