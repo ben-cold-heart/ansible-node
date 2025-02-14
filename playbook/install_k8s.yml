@@ -22,17 +22,44 @@
         state: present
         update_cache: yes
 
-    - name: เพิ่มคีย์ GPG ของ Kubernetes
+    - name: เพิ่มคีย์ GPG ของ Docker
       apt_key:
-        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        url: https://download.docker.com/linux/ubuntu/gpg
         state: present
 
-    - name: เพิ่มที่เก็บแพ็กเกจ Kubernetes
+    - name: เพิ่มที่เก็บแพ็กเกจ Docker
       apt_repository:
-        repo: "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
         state: present
 
     - name: อัปเดตแคชของ APT
+      apt:
+        update_cache: yes
+
+    - name: ติดตั้ง Docker
+      apt:
+        name: docker-ce
+        state: present
+
+    - name: สร้างไดเรกทอรีสำหรับคีย์ริงของ Kubernetes
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: ดาวน์โหลดและติดตั้งคีย์ GPG ของ Kubernetes
+      get_url:
+        url: https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key
+        dest: /etc/apt/keyrings/kubernetes-archive-keyring.gpg
+        mode: '0644'
+
+    - name: เพิ่มที่เก็บแพ็กเกจ Kubernetes
+      apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-archive-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /"
+        filename: "kubernetes"
+        state: present
+
+    - name: อัปเดตแคชของ APT อีกครั้ง
       apt:
         update_cache: yes
 
@@ -43,7 +70,6 @@
           - kubeadm
           - kubectl
         state: present
-        update_cache: yes
 
     - name: กำหนดให้แพ็กเกจ Kubernetes ไม่ถูกอัปเกรดโดยอัตโนมัติ
       apt:
@@ -51,13 +77,7 @@
           - kubelet
           - kubeadm
           - kubectl
-        state: present
-        force: yes
-        allow_downgrade: yes
-        allow_unauthenticated: yes
-        install_recommends: no
-        update_cache: yes
-        upgrade: 'no'
+        state: hold
 
     - name: เริ่มและเปิดใช้งานบริการ kubelet
       systemd:
