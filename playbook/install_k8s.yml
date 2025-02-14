@@ -13,15 +13,11 @@
         regexp: '.*\sswap\s.*'
         replace: ''
 
-    # - name: Install required packages
-    #   apt:
-    #     name:
-    #       - curl
-    #       - apt-transport-https
-    #       - ca-certificates
-    #       - software-properties-common
-    #     state: present
-    #     update_cache: yes
+    - name: Remove conflicting Kubernetes repository entries
+      become: yes
+      lineinfile:
+        path: /etc/apt/sources.list.d/kubernetes.list
+        state: absent
 
     - name: Create directory for keyrings
       file:
@@ -52,7 +48,6 @@
           - ca-certificates
           - software-properties-common
         state: present
-        update_cache: yes
 
     - name: Install Kubernetes components
       apt:
@@ -61,7 +56,6 @@
           - kubeadm
           - kubectl
         state: present
-        update_cache: yes
 
     - name: Hold Kubernetes packages at current version
       apt:
