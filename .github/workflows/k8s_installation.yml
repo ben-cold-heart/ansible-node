@@ -26,7 +26,7 @@ jobs:
         run: echo "${{ secrets.ANSIBLE_VAULT_PASS }}" > ~/.ansible_vault_pass
 
       - name: Create `secrets.yml` File
-        run: echo "${{ secrets.ANSIBLE_SECRET_YML }}" | base64 --decode > ./secret2.yml
+        run: echo -e "${{ secrets.ANSIBLE_SECRET_YML }}" > ./secrets.yml
 
       - name: Run Ansible Playbook
         run: |
@@ -35,6 +35,8 @@ jobs:
                 --vault-password-file ~/.ansible_vault_pass
 
       - name: Remove Vault Password File
-        run: rm -f ~/.ansible_vault_pass
+        run: rm -f ~/.ansible_vault_pass ./secret2.yml
+
+
           
 
