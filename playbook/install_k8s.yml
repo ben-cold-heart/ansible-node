@@ -31,6 +31,7 @@
       args:
         executable: /bin/bash
 
+
     - name: Install kubeadm, kubelet, and kubectl
       apt:
         name:
