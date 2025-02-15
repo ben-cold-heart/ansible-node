@@ -1,6 +1,6 @@
 ---
 - name: Deploy Private Docker Registry (Internal Access Only)
-  hosts: target_node
+  hosts: web_servers
   become: yes
   vars_files:
     - registry.yml
