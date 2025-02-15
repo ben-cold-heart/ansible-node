@@ -3,7 +3,7 @@
   hosts: web_servers
   become: yes
   vars_files:
-    - registry.yml
+    - ./config/registry.yml
 
   tasks:
 
