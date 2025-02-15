@@ -1,0 +1,6 @@
+registry_port: "5000"
+registry_data_dir: "/opt/docker-registry"
+registry_auth_dir: "/opt/docker-registry/auth"
+registry_bind_ip: "172.18.1.44"
+registry_user: "devops"
+registry_password: "adc4a4c2d7b3b8796cf4391d48ea453d52a3db7962ff"
