@@ -1,0 +1,42 @@
+name: Registry Container Deploy on Target node
+
+on:
+  push:
+    branches:
+      - registry_installation
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ansible-node
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        
+      - name: Create Secure Inventory File
+        run: |
+          echo "[web_servers]" > inventory.ini
+          echo "${{ secrets.ANSIBLE_INI }}" >> ./inventory.ini
+
+      - name: Create Vault Password File
+        run: echo "${{ secrets.ANSIBLE_VAULT_PASS }}" > ./.ansible_vault_pass
+
+      - name: Create `secrets.yml` File
+        run: echo -e "${{ secrets.ANSIBLE_SECRET_YML }}" > ./secrets.yml
+
+      - name: Run Ansible Playbook
+        run: |
+            ansible-playbook -i inventory.ini ./playbook/install_registry_container.yml \
+                --extra-vars "@secrets.yml" \
+                --extra-vars "ansible_become_password=${{ secrets.ANSIBLE_BECOME_PASS }}" \
+                --extra-vars "@/home/vekin/playbook/config/registry.yml" \
+                --vault-password-file ./.ansible_vault_pass
+
+      - name: Remove Vault Password File
+        run: rm -f ./.ansible_vault_pass ./secrets.yml
+
+
+
+          
+

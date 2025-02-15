@@ -1,0 +1,50 @@
+---
+- name: Deploy Private Docker Registry (Internal Access Only)
+  hosts: target_node
+  become: yes
+  vars_files:
+    - registry.yml
+
+  tasks:
+
+    - name: Pull Docker registry image
+      docker_image:
+        name: registry:2
+        source: pull
+
+    - name: Create directory for Docker Registry data
+      file:
+        path: "{{ registry_data_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Create directory for Authentication
+      file:
+        path: "{{ registry_auth_dir }}"
+        state: directory
+        mode: '0755'
+
+    - name: Generate Registry Authentication File
+      shell: >
+        docker run --rm --entrypoint htpasswd registry:2 -Bbn {{ registry_user }} {{ registry_password }}
+        > {{ registry_auth_dir }}/htpasswd
+      args:
+        creates: "{{ registry_auth_dir }}/htpasswd"
+
+    - name: Run Docker Registry with Authentication (Internal Network Only)
+      docker_container:
+        name: private_registry
+        image: registry:2
+        state: started
+        restart_policy: always
+        network_mode: "bridge"
+        published_ports:
+          - "{{ registry_bind_ip }}:{{ registry_port }}:5000"
+        volumes:
+          - "{{ registry_data_dir }}:/var/lib/registry"
+          - "{{ registry_auth_dir }}:/auth"
+        env:
+          REGISTRY_AUTH: "htpasswd"
+          REGISTRY_AUTH_HTPASSWD_PATH: "/auth/htpasswd"
+          REGISTRY_AUTH_HTPASSWD_REALM: "Registry Realm"
+
